@@ -1,0 +1,24 @@
+# Rohde & Schwarz SMW200A Vector Signal Generator Configuration
+# Used for RX sensitivity and noise figure measurements
+
+instrument:
+  name: "R&S SMW200A"
+  type: signal_generator
+  manufacturer: rohde_schwarz
+  model: "SMW200A"
+
+connection:
+  visa_resource: "TCPIP0::192.168.1.101::inst0::INSTR"
+  timeout_s: 30
+  reset_on_connect: true
+
+defaults:
+  frequency_ghz: 77.0
+  power_dbm: -30.0
+  rf_output: false
+  modulation: "CW"
+  phase_noise_optimization: "low"
+  reference_clock: "internal"
+  level_accuracy_db: 0.5
+  min_power_dbm: -130
+  max_power_dbm: 18

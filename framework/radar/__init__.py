@@ -1,0 +1,1 @@
+"""Radar-specific validation utilities."""

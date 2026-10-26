@@ -1,0 +1,103 @@
+# Nightly Regression Test Suite
+# Comprehensive test suite for full integration regression testing
+# Runs every night via CI scheduled trigger
+
+suite:
+  name: "Nightly Regression"
+  description: "Full integration regression test suite run nightly"
+  timeout_s: 3600
+  priority: high
+  platform: [awr2944, iwr6843, awr1843]
+  tags: [nightly, regression, integration]
+  fail_fast: false
+  retry_count: 1
+
+tests:
+  # Boot and Initialization
+  - name: test_firmware_boot
+    module: tests.integration.test_firmware_update
+    function: test_flash_and_boot
+    timeout_s: 60
+    tags: [boot, critical]
+
+  - name: test_firmware_version
+    module: tests.integration.test_firmware_update
+    function: test_version_register_readback
+    timeout_s: 15
+    tags: [boot, version]
+
+  - name: test_watchdog_init
+    module: tests.integration.test_firmware_update
+    function: test_watchdog_initialized
+    timeout_s: 30
+    tags: [boot, watchdog]
+
+  # Data Path Tests
+  - name: test_adc_data_valid
+    module: tests.integration.test_radar_data_path
+    function: test_adc_data_not_all_zeros
+    timeout_s: 60
+    tags: [data, adc]
+
+  - name: test_frame_capture_size
+    module: tests.integration.test_radar_data_path
+    function: test_frame_capture_correct_size
+    timeout_s: 60
+    tags: [data, frame]
+
+  - name: test_chirp_timing
+    module: tests.integration.test_radar_data_path
+    function: test_chirp_timing_within_tolerance
+    timeout_s: 90
+    tags: [data, timing]
+
+  - name: test_multi_frame_stability
+    module: tests.integration.test_radar_data_path
+    function: test_continuous_frame_capture
+    timeout_s: 180
+    tags: [data, stability]
+
+  - name: test_dma_transfer
+    module: tests.integration.test_radar_data_path
+    function: test_dma_data_integrity
+    timeout_s: 60
+    tags: [data, dma]
+
+  # Communication Tests
+  - name: test_uart_throughput
+    module: tests.integration.test_radar_data_path
+    function: test_uart_max_throughput
+    timeout_s: 60
+    tags: [comm, uart]
+
+  - name: test_spi_interface
+    module: tests.integration.test_radar_data_path
+    function: test_spi_register_access
+    timeout_s: 30
+    tags: [comm, spi]
+
+  # Power Management
+  - name: test_sleep_wake
+    module: tests.integration.test_firmware_update
+    function: test_sleep_and_wake
+    timeout_s: 120
+    tags: [power, sleep]
+
+  - name: test_power_cycle_recovery
+    module: tests.integration.test_firmware_update
+    function: test_power_cycle_boot
+    timeout_s: 90
+    tags: [power, recovery]
+
+  # Error Handling
+  - name: test_invalid_chirp_config
+    module: tests.integration.test_radar_data_path
+    function: test_invalid_config_rejected
+    timeout_s: 30
+    tags: [error, config]
+
+  - name: test_memory_bounds
+    module: tests.integration.test_firmware_update
+    function: test_memory_bounds_check
+    timeout_s: 30
+    tags: [error, memory]

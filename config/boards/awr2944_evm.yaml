@@ -1,0 +1,47 @@
+# AWR2944 EVM Board Configuration
+# TI AWR2944 Evaluation Module for automotive radar firmware testing
+
+board:
+  name: "AWR2944 EVM"
+  platform: awr2944
+  silicon_revision: "ES2.0"
+  description: "77GHz automotive radar sensor EVM"
+  cores:
+    - name: "R5F_0"
+      type: cortex-r5f
+      frequency_mhz: 400
+    - name: "C66x_DSP"
+      type: c66x
+      frequency_mhz: 600
+
+jtag:
+  backend: openocd
+  interface: xds110
+  config_file: "board/ti_awr2944.cfg"
+  speed_khz: 4000
+  serial_number: ""
+  reset_type: "srst_only"
+
+uart:
+  port: "COM3"
+  baudrate: 921600
+  data_bits: 8
+  parity: "none"
+  stop_bits: 1
+  flow_control: false
+
+firmware:
+  default_binary: "firmware/awr2944_test_fw.bin"
+  flash_address: "0x00000000"
+  entry_point: "0x00000000"
+  max_binary_size_kb: 2048
+  flash_method: "jtag"
+
+power:
+  method: usb_relay
+  relay_id: 1
+  boot_delay_s: 2.0
+  power_cycle_delay_s: 1.0
+
+network:
+  ethernet_enabled: false

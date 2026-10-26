@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+.eggs/
+.venv/
+venv/
+
+# Build
+build/
+*.o
+*.elf
+*.bin
+*.out
+*.map
+
+# IDE
+.vscode/
+.idea/
+
+# Reports
+reports/
+*.html
+!templates/*.html
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage

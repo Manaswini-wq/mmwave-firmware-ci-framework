@@ -1,0 +1,85 @@
+# RF Validation Test Suite
+# Instrument-dependent RF performance tests
+# Requires spectrum analyzer and signal generator
+
+suite:
+  name: "RF Validation"
+  description: "RF performance validation using lab instruments"
+  timeout_s: 3600
+  priority: high
+  platform: [awr2944, iwr6843]
+  tags: [rf, validation, instruments]
+  fail_fast: false
+  required_instruments:
+    - keysight_n9010a
+    - rohde_smw200a
+
+tests:
+  - name: test_tx_output_power
+    module: tests.rf.test_tx_performance
+    function: test_tx_power_at_center_freq
+    timeout_s: 120
+    tags: [rf, tx, power]
+    instruments: [keysight_n9010a]
+    description: "Measure TX output power at center frequency"
+    parameters:
+      freq_ghz: 77.0
+      expected_power_dbm: 12.0
+      tolerance_db: 1.5
+
+  - name: test_tx_phase_noise
+    module: tests.rf.test_tx_performance
+    function: test_phase_noise_at_offset
+    timeout_s: 180
+    tags: [rf, tx, phase_noise]
+    instruments: [keysight_n9010a]
+    parameters:
+      offset_khz: 100
+      max_phase_noise_dbc: -80
+
+  - name: test_chirp_bandwidth
+    module: tests.rf.test_chirp_performance
+    function: test_chirp_bandwidth_accuracy
+    timeout_s: 120
+    tags: [rf, chirp, bandwidth]
+    instruments: [keysight_n9010a]
+    parameters:
+      expected_bw_mhz: 4000
+      tolerance_mhz: 50
+
+  - name: test_chirp_linearity
+    module: tests.rf.test_chirp_performance
+    function: test_chirp_frequency_linearity
+    timeout_s: 180
+    tags: [rf, chirp, linearity]
+    instruments: [keysight_n9010a]
+    parameters:
+      max_linearity_error_ppm: 100
+
+  - name: test_rx_sensitivity
+    module: tests.rf.test_rx_performance
+    function: test_receiver_sensitivity
+    timeout_s: 240
+    tags: [rf, rx, sensitivity]
+    instruments: [rohde_smw200a, keysight_n9010a]
+    parameters:
+      inject_power_dbm: -100
+      min_snr_db: 10
+
+  - name: test_rx_noise_figure
+    module: tests.rf.test_rx_performance
+    function: test_noise_figure
+    timeout_s: 120
+    tags: [rf, rx, noise]
+    instruments: [rohde_smw200a]
+    parameters:
+      max_nf_db: 14.0
+
+  - name: test_spurious_emissions
+    module: tests.rf.test_tx_performance
+    function: test_spurious_emission_levels
+    timeout_s: 300
+    tags: [rf, tx, spurious, compliance]
+    instruments: [keysight_n9010a]
+    parameters:
+      max_spur_dbm: -30

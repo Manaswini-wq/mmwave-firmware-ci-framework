@@ -1,0 +1,25 @@
+# Keysight N9010A EXA Signal Analyzer Configuration
+# Used for TX power, phase noise, chirp, and spurious emission measurements
+
+instrument:
+  name: "Keysight N9010A"
+  type: spectrum_analyzer
+  manufacturer: keysight
+  model: "N9010A"
+
+connection:
+  visa_resource: "TCPIP0::192.168.1.100::inst0::INSTR"
+  timeout_s: 30
+  reset_on_connect: true
+
+defaults:
+  center_freq_ghz: 77.0
+  span_mhz: 5000
+  rbw_khz: 100
+  vbw_khz: 100
+  ref_level_dbm: 10
+  attenuation_db: 10
+  sweep_points: 1001
+  detector: "RMS"
+  trace_mode: "WRITE"
+  sweep_time_ms: 100

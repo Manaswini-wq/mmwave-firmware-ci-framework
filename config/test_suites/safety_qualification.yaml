@@ -1,0 +1,95 @@
+# Safety Qualification Test Suite
+# Tests mapped to ISO 26262 ASIL-D and IEC 61508 SIL-3 requirements
+# Manual trigger only - requires controlled lab environment
+
+suite:
+  name: "Safety Qualification"
+  description: "Safety qualification tests for ASIL-D and SIL-3 certification"
+  timeout_s: 7200
+  priority: critical
+  platform: [awr2944]
+  tags: [safety, qualification, asil-d, sil-3]
+  fail_fast: false
+  retry_count: 0  # No retries for qualification tests
+  evidence_dir: "reports/safety_evidence/"
+
+requirements_mapping:
+  standard: "ISO 26262:2018 / IEC 61508:2010"
+  asil_level: "ASIL-D"
+  sil_level: "SIL-3"
+
+tests:
+  # Memory Protection Unit Tests (ISO 26262 Part 6, Table 9)
+  - name: test_mpu_stack_overflow
+    module: tests.safety.test_memory_protection
+    function: test_stack_overflow_detection
+    timeout_s: 120
+    tags: [safety, mpu, asil-d]
+    requirement_ids: [SW-SAF-001, SW-SAF-002]
+
+  - name: test_mpu_null_pointer
+    module: tests.safety.test_memory_protection
+    function: test_null_pointer_trap
+    timeout_s: 60
+    tags: [safety, mpu, asil-d]
+    requirement_ids: [SW-SAF-003]
+
+  - name: test_mpu_region_isolation
+    module: tests.safety.test_memory_protection
+    function: test_memory_region_isolation
+    timeout_s: 120
+    tags: [safety, mpu, asil-d]
+    requirement_ids: [SW-SAF-004, SW-SAF-005]
+
+  # ECC and Data Integrity (IEC 61508 Part 3, Annex A)
+  - name: test_ecc_single_bit_correction
+    module: tests.safety.test_ecc
+    function: test_single_bit_error_correction
+    timeout_s: 180
+    tags: [safety, ecc, sil-3]
+    requirement_ids: [SW-SAF-010]
+
+  - name: test_ecc_double_bit_detection
+    module: tests.safety.test_ecc
+    function: test_double_bit_error_detection
+    timeout_s: 180
+    tags: [safety, ecc, sil-3]
+    requirement_ids: [SW-SAF-011]
+
+  # Watchdog Tests
+  - name: test_watchdog_timeout
+    module: tests.safety.test_watchdog
+    function: test_watchdog_reset_on_timeout
+    timeout_s: 120
+    tags: [safety, watchdog, asil-d]
+    requirement_ids: [SW-SAF-020]
+
+  - name: test_watchdog_window_violation
+    module: tests.safety.test_watchdog
+    function: test_window_watchdog_violation
+    timeout_s: 120
+    tags: [safety, watchdog, asil-d]
+    requirement_ids: [SW-SAF-021]
+
+  # CRC / Checksum Validation
+  - name: test_firmware_crc
+    module: tests.safety.test_integrity
+    function: test_firmware_image_crc32
+    timeout_s: 60
+    tags: [safety, integrity, sil-3]
+    requirement_ids: [SW-SAF-030]
+
+  - name: test_config_checksum
+    module: tests.safety.test_integrity
+    function: test_configuration_checksum
+    timeout_s: 30
+    tags: [safety, integrity, sil-3]
+    requirement_ids: [SW-SAF-031]
+
+  # CPU Self-Test
+  - name: test_cpu_self_test
+    module: tests.safety.test_cpu
+    function: test_cpu_register_march
+    timeout_s: 300
+    tags: [safety, cpu, asil-d]
+    requirement_ids: [SW-SAF-040, SW-SAF-041]

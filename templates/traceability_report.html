@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traceability Report - {{ project_name | default("mmWave Firmware CI") }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f6f9; color: #2d3748; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #1a365d, #2b6cb0); color: white; padding: 30px 40px; border-radius: 8px 8px 0 0; }
+        .header h1 { font-size: 24px; }
+        .header .meta { font-size: 14px; opacity: 0.85; margin-top: 5px; }
+        .summary { background: white; padding: 25px 40px; display: flex; gap: 40px; border-bottom: 1px solid #e2e8f0; }
+        .stat { text-align: center; flex: 1; }
+        .stat .value { font-size: 32px; font-weight: 700; }
+        .stat .label { font-size: 12px; text-transform: uppercase; color: #718096; }
+        .covered { color: #38a169; }
+        .uncovered { color: #e53e3e; }
+        .partial { color: #d69e2e; }
+        .section { background: white; padding: 20px 40px; border-bottom: 1px solid #e2e8f0; }
+        .section h2 { font-size: 18px; color: #1a365d; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #edf2f7; padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #4a5568; border-bottom: 2px solid #cbd5e0; }
+        td { padding: 8px 12px; border-bottom: 1px solid #edf2f7; font-size: 13px; vertical-align: top; }
+        tr:hover { background: #f7fafc; }
+        .req-id { font-family: monospace; font-weight: 600; white-space: nowrap; }
+        .test-list { list-style: none; padding: 0; margin: 0; }
+        .test-list li { padding: 2px 0; font-family: monospace; font-size: 12px; }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .status-covered { background: #c6f6d5; color: #22543d; }
+        .status-partial { background: #fefcbf; color: #744210; }
+        .status-uncovered { background: #fed7d7; color: #742a2a; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #a0aec0; border-radius: 0 0 8px 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Requirements Traceability Report</h1>
+            <div class="meta">
+                <strong>Date:</strong> {{ report_date }} &nbsp;|&nbsp;
+                <strong>Standard:</strong> {{ standard | default("ISO 26262 / IEC 61508") }} &nbsp;|&nbsp;
+                <strong>Build:</strong> {{ build_id | default("N/A") }}
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="stat">
+                <div class="value">{{ total_requirements }}</div>
+                <div class="label">Total Requirements</div>
+            </div>
+            <div class="stat">
+                <div class="value covered">{{ covered_requirements }}</div>
+                <div class="label">Fully Covered</div>
+            </div>
+            <div class="stat">
+                <div class="value partial">{{ partial_requirements }}</div>
+                <div class="label">Partially Covered</div>
+            </div>
+            <div class="stat">
+                <div class="value uncovered">{{ uncovered_requirements }}</div>
+                <div class="label">Not Covered</div>
+            </div>
+            <div class="stat">
+                <div class="value">{{ "%.1f" | format(coverage_percent) }}%</div>
+                <div class="label">Coverage Rate</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Traceability Matrix</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Requirement ID</th>
+                        <th>Description</th>
+                        <th>ASIL/SIL</th>
+                        <th>Linked Tests</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requirements %}
+                    <tr>
+                        <td class="req-id">{{ req.id }}</td>
+                        <td>{{ req.description }}</td>
+                        <td>{{ req.safety_level | default("N/A") }}</td>
+                        <td>
+                            {% if req.tests %}
+                            <ul class="test-list">
+                                {% for test in req.tests %}
+                                <li>{{ test }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <em style="color: #e53e3e;">No linked tests</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ req.status | lower }}">
+                                {{ req.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            Generated by mmWave Firmware CI Framework v{{ framework_version | default("1.6.0") }} |
+            This report is part of the safety evidence package.
+        </div>
+    </div>
+</body>
+</html>

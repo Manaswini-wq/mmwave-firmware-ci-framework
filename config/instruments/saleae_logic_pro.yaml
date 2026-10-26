@@ -1,0 +1,22 @@
+# Saleae Logic Pro 16 Logic Analyzer Configuration
+# Used for timing validation, SPI/UART protocol decode, GPIO monitoring
+
+instrument:
+  name: "Saleae Logic Pro 16"
+  type: logic_analyzer
+  manufacturer: saleae
+  model: "Logic Pro 16"
+
+connection:
+  interface: usb
+  api: "saleae_automation"
+  host: "127.0.0.1"
+  port: 10430
+
+defaults:
+  sample_rate_mhz: 100
+  capture_duration_s: 1.0
+  digital_channels: [0, 1, 2, 3, 4, 5, 6, 7]
+  voltage_threshold_v: 1.65
+  trigger_channel: 0
+  trigger_edge: "rising"

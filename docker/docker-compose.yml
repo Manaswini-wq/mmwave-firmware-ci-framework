@@ -1,0 +1,55 @@
+# mmWave Firmware CI Framework - Docker Compose
+# Services for running tests and optional instrument mocking
+
+version: "3.9"
+
+services:
+  framework:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: mmwave-ci-framework
+    volumes:
+      - ../reports:/workspace/reports
+      - ../logs:/workspace/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CI=true
+      - LOG_LEVEL=INFO
+    command: ["pytest", "tests/unit/", "-v", "--cov=framework", "--cov-report=html"]
+    networks:
+      - ci-network
+
+  instrument-mock:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: mmwave-instrument-mock
+    command: ["python", "-m", "framework.instruments.mock_server", "--port", "5025"]
+    ports:
+      - "5025:5025"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MOCK_MODE=true
+    networks:
+      - ci-network
+    profiles:
+      - mock
+
+  report-server:
+    image: python:3.11-slim
+    container_name: mmwave-report-viewer
+    working_dir: /reports
+    volumes:
+      - ../reports:/reports:ro
+    command: ["python", "-m", "http.server", "8080"]
+    ports:
+      - "8080:8080"
+    networks:
+      - ci-network
+    profiles:
+      - reports
+
+networks:
+  ci-network:
+    driver: bridge

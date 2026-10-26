@@ -1,0 +1,52 @@
+# mmWave Firmware CI Framework Configuration
+# Central configuration for test execution, reporting, and coverage
+
+framework:
+  version: "1.6.0"
+  log_level: INFO
+  log_dir: "logs/"
+  report_dir: "reports/"
+  max_parallel_tests: 4
+  default_timeout_s: 300
+  retry_count: 2
+  retry_backoff_s: 5
+  fail_fast: false
+  junit_output: "reports/junit/"
+
+paths:
+  firmware_dir: "firmware/"
+  test_suites_dir: "config/test_suites/"
+  board_configs_dir: "config/boards/"
+  instrument_configs_dir: "config/instruments/"
+  templates_dir: "templates/"
+  on_target_dir: "on_target/"
+  scripts_dir: "scripts/"
+
+coverage:
+  branch_target_percent: 95
+  line_target_percent: 90
+  mcdc_target_percent: 80
+  safety_critical_branch_target: 100
+  report_format: "html"
+  lcov_output: "reports/coverage.info"
+  exclude_patterns:
+    - "*/test_*"
+    - "*/conftest.py"
+    - "*/mock_*"
+
+notifications:
+  email:
+    enabled: false
+    smtp_server: "smtp.company.com"
+    recipients:
+      - "firmware-ci@company.com"
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#firmware-ci"
+
+artifacts:
+  retention_days: 30
+  upload_on_failure: true
+  include_logs: true
+  include_traces: true

@@ -1,0 +1,47 @@
+# IWR6843 EVM Board Configuration
+# TI IWR6843 Evaluation Module for industrial radar firmware testing
+
+board:
+  name: "IWR6843 EVM"
+  platform: iwr6843
+  silicon_revision: "ES2.0"
+  description: "60GHz industrial mmWave sensor EVM"
+  cores:
+    - name: "R4F"
+      type: cortex-r4f
+      frequency_mhz: 200
+    - name: "C674x_DSP"
+      type: c674x
+      frequency_mhz: 600
+
+jtag:
+  backend: openocd
+  interface: xds110
+  config_file: "board/ti_iwr6843.cfg"
+  speed_khz: 2500
+  serial_number: ""
+  reset_type: "srst_only"
+
+uart:
+  port: "COM5"
+  baudrate: 115200
+  data_bits: 8
+  parity: "none"
+  stop_bits: 1
+  flow_control: false
+
+firmware:
+  default_binary: "firmware/iwr6843_test_fw.bin"
+  flash_address: "0x00000000"
+  entry_point: "0x00000000"
+  max_binary_size_kb: 1024
+  flash_method: "uart_bootloader"
+
+power:
+  method: usb_relay
+  relay_id: 2
+  boot_delay_s: 3.0
+  power_cycle_delay_s: 1.5
+
+network:
+  ethernet_enabled: false

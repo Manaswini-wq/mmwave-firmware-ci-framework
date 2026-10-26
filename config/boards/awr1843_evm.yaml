@@ -1,0 +1,47 @@
+# AWR1843 EVM Board Configuration
+# TI AWR1843 Evaluation Module for automotive radar firmware testing
+
+board:
+  name: "AWR1843 EVM"
+  platform: awr1843
+  silicon_revision: "ES1.0"
+  description: "76-81GHz automotive radar sensor EVM"
+  cores:
+    - name: "R4F"
+      type: cortex-r4f
+      frequency_mhz: 200
+    - name: "C66x_DSP"
+      type: c66x
+      frequency_mhz: 600
+
+jtag:
+  backend: openocd
+  interface: xds110
+  config_file: "board/ti_awr1843.cfg"
+  speed_khz: 2500
+  serial_number: ""
+  reset_type: "srst_only"
+
+uart:
+  port: "COM7"
+  baudrate: 115200
+  data_bits: 8
+  parity: "none"
+  stop_bits: 1
+  flow_control: false
+
+firmware:
+  default_binary: "firmware/awr1843_test_fw.bin"
+  flash_address: "0x00000000"
+  entry_point: "0x00000000"
+  max_binary_size_kb: 1024
+  flash_method: "uart_bootloader"
+
+power:
+  method: usb_relay
+  relay_id: 3
+  boot_delay_s: 2.5
+  power_cycle_delay_s: 1.0
+
+network:
+  ethernet_enabled: false

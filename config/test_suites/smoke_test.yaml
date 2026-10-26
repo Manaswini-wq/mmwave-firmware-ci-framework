@@ -1,0 +1,47 @@
+# Smoke Test Suite - Quick sanity verification
+# Run after every firmware flash to verify basic functionality
+
+suite:
+  name: "Smoke Test"
+  description: "Quick sanity check after firmware flash"
+  timeout_s: 300
+  priority: critical
+  platform: [awr2944, iwr6843, awr1843]
+  tags: [smoke, sanity]
+  fail_fast: true
+
+tests:
+  - name: test_firmware_boot
+    module: tests.integration.test_firmware_update
+    function: test_flash_and_boot
+    timeout_s: 60
+    tags: [smoke, boot]
+    description: "Verify firmware boots successfully after flash"
+
+  - name: test_uart_communication
+    module: tests.integration.test_radar_data_path
+    function: test_adc_data_not_all_zeros
+    timeout_s: 30
+    tags: [smoke, comm]
+    description: "Verify UART communication with target"
+
+  - name: test_basic_frame_capture
+    module: tests.integration.test_radar_data_path
+    function: test_frame_capture_correct_size
+    timeout_s: 60
+    tags: [smoke, data]
+    description: "Capture one radar frame and verify size"
+
+  - name: test_register_readback
+    module: tests.integration.test_firmware_update
+    function: test_version_register_readback
+    timeout_s: 15
+    tags: [smoke, register]
+    description: "Read firmware version register and validate"
+
+  - name: test_system_clock
+    module: tests.integration.test_radar_data_path
+    function: test_system_clock_frequency
+    timeout_s: 20
+    tags: [smoke, clock]
+    description: "Verify system clock is at expected frequency"

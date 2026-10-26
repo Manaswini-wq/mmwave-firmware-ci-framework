@@ -1,0 +1,101 @@
+# Safety Qualification Workflow
+# Manual trigger only - runs ASIL-D and SIL-3 test suites
+# Generates evidence package for certification audits
+
+name: Safety Qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      board:
+        description: "Board configuration"
+        required: true
+        default: "config/boards/awr2944_evm.yaml"
+        type: choice
+        options:
+          - config/boards/awr2944_evm.yaml
+      operator:
+        description: "Test operator name"
+        required: true
+        type: string
+      firmware_version:
+        description: "Firmware version under test"
+        required: true
+        type: string
+      board_serial:
+        description: "Board serial number"
+        required: true
+        type: string
+
+jobs:
+  qualification:
+    name: Safety Qualification Tests
+    runs-on: [self-hosted, lab-runner, safety-qualified]
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Record test environment
+        run: |
+          mkdir -p reports/safety_evidence
+          cat > reports/safety_evidence/environment.txt << EOF
+          Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          Operator: ${{ github.event.inputs.operator }}
+          Firmware Version: ${{ github.event.inputs.firmware_version }}
+          Board Serial: ${{ github.event.inputs.board_serial }}
+          Board Config: ${{ github.event.inputs.board }}
+          Framework Version: $(python -c "import framework; print(framework.__version__)")
+          Python Version: $(python --version)
+          Git Commit: ${{ github.sha }}
+          EOF
+
+      - name: Run ASIL-D / SIL-3 qualification suite
+        run: |
+          pytest tests/safety/ -v \
+            --board-config=${{ github.event.inputs.board }} \
+            --suite=config/test_suites/safety_qualification.yaml \
+            --no-retry \
+            --junit-xml=reports/safety_evidence/junit_results.xml \
+            --html=reports/safety_evidence/test_report.html \
+            --self-contained-html \
+            --timeout=600
+
+      - name: Generate coverage report
+        if: always()
+        run: |
+          if [ -f reports/coverage.info ]; then
+            perl scripts/perl/coverage_report.pl \
+              --input reports/coverage.info \
+              --output reports/safety_evidence/coverage_summary.md \
+              --line-threshold 100 \
+              --branch-threshold 100
+          fi
+
+      - name: Generate traceability report
+        if: always()
+        run: |
+          python -m framework.safety.generate_traceability \
+            --suite config/test_suites/safety_qualification.yaml \
+            --results reports/safety_evidence/junit_results.xml \
+            --output reports/safety_evidence/traceability_report.html \
+            || echo "Traceability generation skipped"
+
+      - name: Upload evidence package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safety-evidence-${{ github.event.inputs.firmware_version }}-${{ github.run_number }}
+          path: reports/safety_evidence/
+          retention-days: 365

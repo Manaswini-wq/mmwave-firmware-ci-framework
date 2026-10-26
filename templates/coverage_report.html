@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coverage Report - {{ project_name | default("mmWave Firmware CI") }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f6f9; color: #2d3748; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #1a365d, #2b6cb0); color: white; padding: 30px 40px; border-radius: 8px 8px 0 0; }
+        .header h1 { font-size: 24px; }
+        .header .meta { font-size: 14px; opacity: 0.85; margin-top: 5px; }
+        .summary { background: white; padding: 25px 40px; display: flex; gap: 40px; border-bottom: 1px solid #e2e8f0; }
+        .metric { text-align: center; flex: 1; }
+        .metric .value { font-size: 36px; font-weight: 700; }
+        .metric .label { font-size: 12px; text-transform: uppercase; color: #718096; }
+        .metric .bar { background: #e2e8f0; border-radius: 6px; height: 10px; margin-top: 8px; overflow: hidden; }
+        .metric .bar-fill { height: 100%; border-radius: 6px; }
+        .good { color: #38a169; }
+        .warn { color: #d69e2e; }
+        .bad { color: #e53e3e; }
+        .fill-good { background: #38a169; }
+        .fill-warn { background: #d69e2e; }
+        .fill-bad { background: #e53e3e; }
+        .section { background: white; padding: 20px 40px; border-bottom: 1px solid #e2e8f0; }
+        .section h2 { font-size: 18px; color: #1a365d; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #edf2f7; padding: 10px 14px; text-align: left; font-size: 13px; text-transform: uppercase; color: #4a5568; }
+        td { padding: 8px 14px; border-bottom: 1px solid #edf2f7; font-size: 14px; }
+        tr:hover { background: #f7fafc; }
+        .cov-bar { background: #e2e8f0; border-radius: 4px; height: 16px; width: 120px; display: inline-block; vertical-align: middle; overflow: hidden; }
+        .cov-bar-fill { height: 100%; border-radius: 4px; }
+        .uncovered-list { list-style: none; padding: 0; }
+        .uncovered-list li { padding: 4px 0; font-family: monospace; font-size: 13px; color: #e53e3e; }
+        .uncovered-list li::before { content: "\2718 "; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #a0aec0; border-radius: 0 0 8px 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Code Coverage Report</h1>
+            <div class="meta">
+                <strong>Date:</strong> {{ report_date }} &nbsp;|&nbsp;
+                <strong>Build:</strong> {{ build_id | default("N/A") }} &nbsp;|&nbsp;
+                <strong>Target:</strong> Line {{ line_target }}% / Branch {{ branch_target }}%
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="metric">
+                <div class="value {% if line_coverage >= line_target %}good{% elif line_coverage >= line_target * 0.9 %}warn{% else %}bad{% endif %}">
+                    {{ "%.1f" | format(line_coverage) }}%
+                </div>
+                <div class="label">Line Coverage</div>
+                <div class="bar">
+                    <div class="bar-fill {% if line_coverage >= line_target %}fill-good{% elif line_coverage >= line_target * 0.9 %}fill-warn{% else %}fill-bad{% endif %}" style="width: {{ line_coverage }}%;"></div>
+                </div>
+            </div>
+            <div class="metric">
+                <div class="value {% if branch_coverage >= branch_target %}good{% elif branch_coverage >= branch_target * 0.9 %}warn{% else %}bad{% endif %}">
+                    {{ "%.1f" | format(branch_coverage) }}%
+                </div>
+                <div class="label">Branch Coverage</div>
+                <div class="bar">
+                    <div class="bar-fill {% if branch_coverage >= branch_target %}fill-good{% elif branch_coverage >= branch_target * 0.9 %}fill-warn{% else %}fill-bad{% endif %}" style="width: {{ branch_coverage }}%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Per-File Coverage</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Lines Hit / Total</th>
+                        <th>Coverage</th>
+                        <th>Visual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                    <tr>
+                        <td><code>{{ file.name }}</code></td>
+                        <td>{{ file.lines_hit }} / {{ file.lines_total }}</td>
+                        <td class="{% if file.coverage >= line_target %}good{% elif file.coverage >= line_target * 0.9 %}warn{% else %}bad{% endif %}">
+                            {{ "%.1f" | format(file.coverage) }}%
+                        </td>
+                        <td>
+                            <div class="cov-bar">
+                                <div class="cov-bar-fill {% if file.coverage >= line_target %}fill-good{% elif file.coverage >= line_target * 0.9 %}fill-warn{% else %}fill-bad{% endif %}" style="width: {{ file.coverage }}%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if uncovered_functions %}
+        <div class="section">
+            <h2>Uncovered Functions</h2>
+            <ul class="uncovered-list">
+                {% for fn in uncovered_functions %}
+                <li>{{ fn.file }}::<strong>{{ fn.name }}</strong></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            Generated by mmWave Firmware CI Framework v{{ framework_version | default("1.6.0") }}
+        </div>
+    </div>
+</body>
+</html>

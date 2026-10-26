@@ -1,0 +1,92 @@
+# Nightly Regression Pipeline
+# Runs the full integration test suite on a schedule
+
+name: Nightly Regression
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # 2:00 AM UTC daily
+  workflow_dispatch:
+    inputs:
+      board:
+        description: "Board configuration"
+        required: false
+        default: "config/boards/awr2944_evm.yaml"
+        type: choice
+        options:
+          - config/boards/awr2944_evm.yaml
+          - config/boards/iwr6843_evm.yaml
+          - config/boards/awr1843_evm.yaml
+      suite:
+        description: "Test suite"
+        required: false
+        default: "config/test_suites/nightly_regression.yaml"
+
+jobs:
+  nightly:
+    name: Nightly Integration Tests
+    runs-on: [self-hosted, lab-runner]
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run nightly regression suite
+        run: |
+          pytest tests/integration/ -v \
+            --board-config=${{ github.event.inputs.board || 'config/boards/awr2944_evm.yaml' }} \
+            --suite=${{ github.event.inputs.suite || 'config/test_suites/nightly_regression.yaml' }} \
+            --junit-xml=reports/junit/nightly_results.xml \
+            --html=reports/nightly_report.html \
+            --self-contained-html \
+            --timeout=300
+        continue-on-error: true
+
+      - name: Generate aggregated report
+        if: always()
+        run: |
+          perl scripts/perl/result_aggregator.pl \
+            --input-dir reports/junit/ \
+            --output-csv reports/aggregated_results.csv \
+            --output-txt reports/aggregated_summary.txt
+
+      - name: Generate regression diff
+        if: always()
+        run: |
+          if [ -f reports/previous_results.csv ]; then
+            perl scripts/perl/regression_diff.pl \
+              --baseline reports/previous_results.csv \
+              --current reports/aggregated_results.csv \
+              --output reports/regression_diff.md \
+              --no-fail-on-new
+          fi
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-reports-${{ github.run_number }}
+          path: reports/
+          retention-days: 30
+
+      - name: Notify on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Nightly regression FAILED: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

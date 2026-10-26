@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ suite_name }} - Test Report</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f6f9; color: #2d3748; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #1a365d, #2b6cb0); color: white; padding: 30px 40px; border-radius: 8px 8px 0 0; }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header .meta { font-size: 14px; opacity: 0.85; }
+        .summary-bar { background: white; padding: 20px 40px; display: flex; gap: 30px; border-bottom: 1px solid #e2e8f0; }
+        .summary-item { text-align: center; }
+        .summary-item .value { font-size: 28px; font-weight: 700; }
+        .summary-item .label { font-size: 12px; text-transform: uppercase; color: #718096; }
+        .pass .value { color: #38a169; }
+        .fail .value { color: #e53e3e; }
+        .skip .value { color: #d69e2e; }
+        .duration .value { color: #3182ce; }
+        .pass-rate-bar { background: white; padding: 15px 40px; border-bottom: 1px solid #e2e8f0; }
+        .bar-outer { background: #e2e8f0; border-radius: 10px; height: 20px; overflow: hidden; }
+        .bar-inner { height: 100%; border-radius: 10px; transition: width 0.3s ease; }
+        .bar-pass { background: #38a169; }
+        .bar-fail { background: #e53e3e; }
+        .bar-skip { background: #d69e2e; }
+        .pass-rate-text { text-align: right; font-size: 14px; margin-top: 5px; color: #4a5568; }
+        .results-table { background: white; border-radius: 0 0 8px 8px; overflow: hidden; }
+        .results-table table { width: 100%; border-collapse: collapse; }
+        .results-table th { background: #edf2f7; padding: 12px 16px; text-align: left; font-size: 13px; text-transform: uppercase; color: #4a5568; border-bottom: 2px solid #cbd5e0; }
+        .results-table td { padding: 10px 16px; border-bottom: 1px solid #edf2f7; font-size: 14px; }
+        .results-table tr:hover { background: #f7fafc; }
+        .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .status-pass { background: #c6f6d5; color: #22543d; }
+        .status-fail { background: #fed7d7; color: #742a2a; }
+        .status-skip { background: #fefcbf; color: #744210; }
+        .status-error { background: #fed7d7; color: #742a2a; }
+        .message { font-size: 12px; color: #718096; max-width: 400px; word-wrap: break-word; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #a0aec0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ project_name | default("mmWave Firmware CI") }}</h1>
+            <div class="meta">
+                <strong>Suite:</strong> {{ suite_name }} &nbsp;|&nbsp;
+                <strong>Date:</strong> {{ report_date }} &nbsp;|&nbsp;
+                <strong>Platform:</strong> {{ platform | default("N/A") }} &nbsp;|&nbsp;
+                <strong>Build:</strong> {{ build_id | default("N/A") }}
+            </div>
+        </div>
+
+        <div class="summary-bar">
+            <div class="summary-item">
+                <div class="value">{{ total_tests }}</div>
+                <div class="label">Total</div>
+            </div>
+            <div class="summary-item pass">
+                <div class="value">{{ passed }}</div>
+                <div class="label">Passed</div>
+            </div>
+            <div class="summary-item fail">
+                <div class="value">{{ failed }}</div>
+                <div class="label">Failed</div>
+            </div>
+            <div class="summary-item skip">
+                <div class="value">{{ skipped }}</div>
+                <div class="label">Skipped</div>
+            </div>
+            <div class="summary-item duration">
+                <div class="value">{{ "%.1f" | format(total_duration_s) }}s</div>
+                <div class="label">Duration</div>
+            </div>
+        </div>
+
+        <div class="pass-rate-bar">
+            <div class="bar-outer">
+                <div style="display: flex; width: 100%; height: 100%;">
+                    <div class="bar-inner bar-pass" style="width: {{ pass_rate }}%;"></div>
+                    <div class="bar-inner bar-fail" style="width: {{ fail_rate }}%;"></div>
+                    <div class="bar-inner bar-skip" style="width: {{ skip_rate }}%;"></div>
+                </div>
+            </div>
+            <div class="pass-rate-text">Pass Rate: <strong>{{ "%.1f" | format(pass_rate) }}%</strong></div>
+        </div>
+
+        <div class="results-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Test Name</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in test_results %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><code>{{ test.name }}</code></td>
+                        <td>
+                            <span class="status-badge status-{{ test.status | lower }}">
+                                {{ test.status }}
+                            </span>
+                        </td>
+                        <td>{{ "%.2f" | format(test.duration_s) }}s</td>
+                        <td class="message">{{ test.message | default("") }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            Generated by mmWave Firmware CI Framework v{{ framework_version | default("1.6.0") }}
+        </div>
+    </div>
+</body>
+</html>
